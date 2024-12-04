@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async {
+  await dotenv.load();
   runApp(const MyApp());
 }
 
@@ -26,6 +28,7 @@ class WebView extends StatefulWidget {
 
 class WebViewState extends State<WebView> {
   late InAppWebViewController webViewController;
+  final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://www.prayu.site';
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +38,7 @@ class WebViewState extends State<WebView> {
         child: SafeArea(
           child: InAppWebView(
             initialUrlRequest: URLRequest(
-              url: WebUri('https://www.prayu.site'), // WebUri를 사용하여 URL 지정
+              url: WebUri(baseUrl),
             ),
             onWebViewCreated: (controller) {
               webViewController = controller;
