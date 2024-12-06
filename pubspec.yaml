@@ -10,6 +10,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_inappwebview: ^6.1.5
   flutter_dotenv: ^5.2.1
+  onesignal_flutter: ^5.2.8
 dev_dependencies:
   flutter_test:
     sdk: flutter
