@@ -11,6 +11,7 @@ dependencies:
   flutter_inappwebview: ^6.1.5
   flutter_dotenv: ^5.2.1
   onesignal_flutter: ^5.2.8
+  flutter_native_splash: ^2.4.3
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -26,3 +27,10 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/icon/prayu_logo_1024.png"
   min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#CECFFF"
+  image: assets/icon/prayu_logo_text.png
+  android: true
+  ios: true
+  fullscreen: true
