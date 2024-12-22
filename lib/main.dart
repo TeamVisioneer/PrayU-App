@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
-  await dotenv.load();
+  const environment = String.fromEnvironment('ENV', defaultValue: 'staging');
+  await dotenv.load(fileName: '.env.$environment');
   runApp(const MyApp());
 }
 
@@ -40,7 +41,49 @@ class WebView extends StatefulWidget {
 
 class WebViewState extends State<WebView> {
   late InAppWebViewController webViewController;
+  final String platform = Platform.isIOS ? "prayu-ios" : "prayu-android";
   final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://www.prayu.site';
+  final MethodChannel channel =
+      const MethodChannel("com.team.visioneer.prayu/intent");
+
+  String? extractFallbackUrl(String intentUrl) {
+    try {
+      List<String> parts = intentUrl.split(';');
+
+      for (String part in parts) {
+        if (part.startsWith('S.browser_fallback_url=')) {
+          String encodedFallbackUrl = part.split('=')[1];
+          return Uri.decodeFull(encodedFallbackUrl);
+        }
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
+  }
+
+  Future<NavigationActionPolicy> _shouldOverrideUrlLoading(
+      InAppWebViewController controller,
+      NavigationAction navigationAction) async {
+    final uri = navigationAction.request.url!;
+    final url = uri.toString();
+    if (uri.scheme == "intent") {
+      final result = await channel.invokeMethod("handleIntent", {"url": url});
+      if (result == false) {
+        final fallbackUrl = extractFallbackUrl(url);
+        if (fallbackUrl != null) {
+          await controller.loadUrl(
+            urlRequest: URLRequest(
+              url: WebUri(fallbackUrl),
+              headers: {'Accept-Language': 'ko-KR'},
+            ),
+          );
+        }
+      }
+      return NavigationActionPolicy.CANCEL;
+    }
+    return NavigationActionPolicy.ALLOW;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,34 +106,13 @@ class WebViewState extends State<WebView> {
                 headers: {'Accept-Language': 'ko-KR'},
               ),
               initialSettings: InAppWebViewSettings(
-                // userAgent: userAgent,
                 javaScriptEnabled: true,
                 javaScriptCanOpenWindowsAutomatically: true,
                 useOnDownloadStart: true,
                 useShouldOverrideUrlLoading: true,
+                supportMultipleWindows: true,
               ),
-              shouldOverrideUrlLoading: (controller, navigationAction) async {
-                var uri = navigationAction.request.url!;
-                if (uri.scheme == "intent") {
-                  try {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    return NavigationActionPolicy.CANCEL;
-                  } catch (e) {
-                    String? fallbackUrl =
-                        uri.queryParameters['browser_fallback_url'];
-                    if (fallbackUrl != null) {
-                      await controller.loadUrl(
-                        urlRequest: URLRequest(
-                          url: WebUri(fallbackUrl),
-                          headers: {'Accept-Language': 'ko-KR'},
-                        ),
-                      );
-                      return NavigationActionPolicy.CANCEL;
-                    }
-                  }
-                }
-                return NavigationActionPolicy.ALLOW;
-              },
+              shouldOverrideUrlLoading: _shouldOverrideUrlLoading,
               onWebViewCreated: (controller) async {
                 webViewController = controller;
                 String? currentUserAgent = await webViewController
@@ -99,7 +121,14 @@ class WebViewState extends State<WebView> {
                     Platform.isIOS ? "prayu-ios" : "prayu-android";
                 String newUserAgent = '$currentUserAgent $userAgent';
                 await webViewController.setSettings(
-                    settings: InAppWebViewSettings(userAgent: newUserAgent));
+                    settings: InAppWebViewSettings(
+                  userAgent: newUserAgent,
+                  javaScriptEnabled: true,
+                  javaScriptCanOpenWindowsAutomatically: true,
+                  useOnDownloadStart: true,
+                  useShouldOverrideUrlLoading: true,
+                  supportMultipleWindows: true,
+                ));
 
                 webViewController.addJavaScriptHandler(
                   handlerName: 'onLogin',

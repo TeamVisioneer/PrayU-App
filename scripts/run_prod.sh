@@ -1,0 +1,1 @@
+flutter run --dart-define=ENV=prod
