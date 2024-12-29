@@ -4,6 +4,7 @@
 # pod install
 # cd ..
 
+adb shell pm clear com.team.visioneer.prayu
 cd android
 ./gradlew clean
 cd ..

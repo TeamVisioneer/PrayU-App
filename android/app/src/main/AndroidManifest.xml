@@ -7,7 +7,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:taskAffinity=""
+            android:taskAffinity="com.team.visioneer.prayu"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -19,21 +19,19 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
-                <data android:scheme="intent" />
-                <data android:scheme="kakaokompassauth" />
-                <data android:scheme="kakaolink" />
-                <data android:scheme="kakaoplus" />
             </intent-filter>
         </activity>
         
-      
-
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        
+        <meta-data
+            android:name="com.onesignal.NotificationIcon"
+            android:value="ic_stat_onesignal_default" />
 
     </application>
-    
+
     <queries>
         <package android:name="com.kakao.talk" />
         <intent>
