@@ -3,6 +3,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   await dotenv.load();
@@ -40,7 +41,6 @@ class WebView extends StatefulWidget {
 class WebViewState extends State<WebView> {
   late InAppWebViewController webViewController;
   final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://www.prayu.site';
-  final String userAgent = Platform.isIOS ? "prayu-ios" : "prayu-android";
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +63,7 @@ class WebViewState extends State<WebView> {
                 headers: {'Accept-Language': 'ko-KR'},
               ),
               initialSettings: InAppWebViewSettings(
-                userAgent: userAgent,
+                // userAgent: userAgent,
                 javaScriptEnabled: true,
                 javaScriptCanOpenWindowsAutomatically: true,
                 useOnDownloadStart: true,
@@ -73,13 +73,11 @@ class WebViewState extends State<WebView> {
                 var uri = navigationAction.request.url!;
                 if (uri.scheme == "intent") {
                   try {
-                    String urlString = uri.toString();
-                    String decodedUrl = Uri.decodeFull(urlString);
-                    RegExp fallbackUrlRegExp =
-                        RegExp(r"browser_fallback_url=([^;]+)");
-                    Match? match = fallbackUrlRegExp.firstMatch(decodedUrl);
-                    String? fallbackUrl = match?.group(1);
-
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    return NavigationActionPolicy.CANCEL;
+                  } catch (e) {
+                    String? fallbackUrl =
+                        uri.queryParameters['browser_fallback_url'];
                     if (fallbackUrl != null) {
                       await controller.loadUrl(
                         urlRequest: URLRequest(
@@ -89,14 +87,20 @@ class WebViewState extends State<WebView> {
                       );
                       return NavigationActionPolicy.CANCEL;
                     }
-                  } catch (e) {
-                    return NavigationActionPolicy.ALLOW;
                   }
                 }
                 return NavigationActionPolicy.ALLOW;
               },
-              onWebViewCreated: (controller) {
+              onWebViewCreated: (controller) async {
                 webViewController = controller;
+                String? currentUserAgent = await webViewController
+                    .evaluateJavascript(source: 'navigator.userAgent;');
+                String userAgent =
+                    Platform.isIOS ? "prayu-ios" : "prayu-android";
+                String newUserAgent = '$currentUserAgent $userAgent';
+                await webViewController.setSettings(
+                    settings: InAppWebViewSettings(userAgent: newUserAgent));
+
                 webViewController.addJavaScriptHandler(
                   handlerName: 'onLogin',
                   callback: (args) async {
