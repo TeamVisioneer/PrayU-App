@@ -6,8 +6,7 @@ import 'dart:io';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 void main() async {
-  const environment = String.fromEnvironment('ENV', defaultValue: 'staging');
-  await dotenv.load(fileName: '.env.$environment');
+  await dotenv.load();
   runApp(const MyApp());
 }
 
