@@ -53,6 +53,9 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>이 앱은 사용자 위치에 접근하여 컨텐츠 관리 기능을 제공합니다.</string>
 		<key>LSApplicationQueriesSchemes</key>
 		<array>
 			<string>kakaokompassauth</string>
