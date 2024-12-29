@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
-  await dotenv.load();
+  const environment = String.fromEnvironment('ENV', defaultValue: 'staging');
+  await dotenv.load(fileName: '.env.$environment');
   runApp(const MyApp());
 }
 
@@ -15,9 +16,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
     OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID'] ?? '');
+    OneSignal.LiveActivities.setupDefault();
     OneSignal.Notifications.requestPermission(true);
+    OneSignal.Notifications.clearAll();
 
     return const MaterialApp(
       locale: Locale('ko', 'KR'),
@@ -38,9 +40,80 @@ class WebView extends StatefulWidget {
   WebViewState createState() => WebViewState();
 }
 
-class WebViewState extends State<WebView> {
+class WebViewState extends State<WebView> with WidgetsBindingObserver {
   late InAppWebViewController webViewController;
+  bool isError = false;
+  final String platform = Platform.isIOS ? "prayu-ios" : "prayu-android";
   final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://www.prayu.site';
+  final MethodChannel channel =
+      const MethodChannel("com.team.visioneer.prayu/intent");
+
+  String? extractFallbackUrl(String intentUrl) {
+    try {
+      List<String> parts = intentUrl.split(';');
+      for (String part in parts) {
+        if (part.startsWith('S.browser_fallback_url=')) {
+          String encodedFallbackUrl = part.split('=')[1];
+          return Uri.decodeFull(encodedFallbackUrl);
+        }
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
+  }
+
+  Future<NavigationActionPolicy> _shouldOverrideUrlLoading(
+      InAppWebViewController controller,
+      NavigationAction navigationAction) async {
+    final uri = navigationAction.request.url!;
+    final url = uri.toString();
+    if (uri.scheme == "intent") {
+      final result = await channel.invokeMethod("handleIntent", {"url": url});
+      if (result == false) {
+        final fallbackUrl = extractFallbackUrl(url);
+        if (fallbackUrl != null) {
+          await controller.loadUrl(
+            urlRequest: URLRequest(
+              url: WebUri(fallbackUrl),
+              headers: {'Accept-Language': 'ko-KR'},
+            ),
+          );
+        }
+      }
+      return NavigationActionPolicy.CANCEL;
+    }
+    return NavigationActionPolicy.ALLOW;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    OneSignal.Notifications.addClickListener(
+      (OSNotificationClickEvent event) async {
+        final url = event.notification.additionalData?['url'] as String?;
+        if (url != null) {
+          await webViewController.loadUrl(
+            urlRequest: URLRequest(url: WebUri(url)),
+          );
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      OneSignal.Notifications.clearAll();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,72 +122,125 @@ class WebViewState extends State<WebView> {
       onPopInvokedWithResult: (didPop, result) async {
         if (await webViewController.canGoBack()) {
           webViewController.goBack();
-        } else if (context.mounted) {
-          Navigator.of(context).pop();
+        } else {
+          SystemNavigator.pop();
         }
       },
       child: Scaffold(
         body: Container(
           color: const Color(0xFFF2F3FD),
           child: SafeArea(
-            child: InAppWebView(
-              initialUrlRequest: URLRequest(
-                url: WebUri(baseUrl),
-                headers: {'Accept-Language': 'ko-KR'},
-              ),
-              initialSettings: InAppWebViewSettings(
-                // userAgent: userAgent,
-                javaScriptEnabled: true,
-                javaScriptCanOpenWindowsAutomatically: true,
-                useOnDownloadStart: true,
-                useShouldOverrideUrlLoading: true,
-              ),
-              shouldOverrideUrlLoading: (controller, navigationAction) async {
-                var uri = navigationAction.request.url!;
-                if (uri.scheme == "intent") {
-                  try {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    return NavigationActionPolicy.CANCEL;
-                  } catch (e) {
-                    String? fallbackUrl =
-                        uri.queryParameters['browser_fallback_url'];
-                    if (fallbackUrl != null) {
-                      await controller.loadUrl(
-                        urlRequest: URLRequest(
-                          url: WebUri(fallbackUrl),
-                          headers: {'Accept-Language': 'ko-KR'},
+            child: isError
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.language, size: 80),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "네트워크 연결에 실패했습니다.",
+                          style: TextStyle(fontSize: 18),
+                          textAlign: TextAlign.center,
                         ),
-                      );
-                      return NavigationActionPolicy.CANCEL;
-                    }
-                  }
-                }
-                return NavigationActionPolicy.ALLOW;
-              },
-              onWebViewCreated: (controller) async {
-                webViewController = controller;
-                String? currentUserAgent = await webViewController
-                    .evaluateJavascript(source: 'navigator.userAgent;');
-                String userAgent =
-                    Platform.isIOS ? "prayu-ios" : "prayu-android";
-                String newUserAgent = '$currentUserAgent $userAgent';
-                await webViewController.setSettings(
-                    settings: InAppWebViewSettings(userAgent: newUserAgent));
+                        const SizedBox(height: 20),
+                        SizedBox(
+                            width: 150,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  isError = false;
+                                });
+                                webViewController.reload();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                              ),
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xFF608CFF),
+                                      Color(0xFF4574F1)
+                                    ], // 그라디언트 색
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 24),
+                                  child: const Text(
+                                    "새로고침",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ))
+                      ],
+                    ),
+                  )
+                : InAppWebView(
+                    initialUrlRequest: URLRequest(
+                      url: WebUri(baseUrl),
+                      headers: {'Accept-Language': 'ko-KR'},
+                    ),
+                    initialSettings: InAppWebViewSettings(
+                      javaScriptEnabled: true,
+                      javaScriptCanOpenWindowsAutomatically: true,
+                      useOnDownloadStart: true,
+                      useShouldOverrideUrlLoading: true,
+                      supportMultipleWindows: true,
+                    ),
+                    shouldOverrideUrlLoading: _shouldOverrideUrlLoading,
+                    onReceivedError: (controller, request, error) {
+                      setState(() {
+                        isError = true;
+                      });
+                    },
+                    onReceivedHttpError: (controller, request, response) {
+                      setState(() {
+                        isError = true;
+                      });
+                    },
+                    onWebViewCreated: (controller) async {
+                      webViewController = controller;
+                      String? currentUserAgent = await webViewController
+                          .evaluateJavascript(source: 'navigator.userAgent;');
+                      String userAgent =
+                          Platform.isIOS ? "prayu-ios" : "prayu-android";
+                      String newUserAgent = '$currentUserAgent $userAgent';
+                      await webViewController.setSettings(
+                          settings: InAppWebViewSettings(
+                        userAgent: newUserAgent,
+                        javaScriptEnabled: true,
+                        javaScriptCanOpenWindowsAutomatically: true,
+                        useOnDownloadStart: true,
+                        useShouldOverrideUrlLoading: true,
+                        supportMultipleWindows: true,
+                      ));
 
-                webViewController.addJavaScriptHandler(
-                  handlerName: 'onLogin',
-                  callback: (args) async {
-                    String userId = args[0];
-                    try {
-                      await OneSignal.login(userId);
-                      return {'status': 'success', 'userId': userId};
-                    } catch (error) {
-                      return {'status': 'error', 'message': error.toString()};
-                    }
-                  },
-                );
-              },
-            ),
+                      webViewController.addJavaScriptHandler(
+                        handlerName: 'onLogin',
+                        callback: (args) async {
+                          String userId = args[0];
+                          try {
+                            await OneSignal.login(userId);
+                            await OneSignal.User.pushSubscription.optIn();
+                            await OneSignal.User.addTagWithKey(
+                                "userId", userId);
+                            return {'status': 'success', 'userId': userId};
+                          } catch (error) {
+                            return {
+                              'status': 'error',
+                              'message': error.toString()
+                            };
+                          }
+                        },
+                      );
+                    },
+                  ),
           ),
         ),
       ),
