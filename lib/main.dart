@@ -194,11 +194,6 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                       supportMultipleWindows: true,
                     ),
                     shouldOverrideUrlLoading: _shouldOverrideUrlLoading,
-                    onReceivedError: (controller, request, error) {
-                      setState(() {
-                        isError = true;
-                      });
-                    },
                     onReceivedHttpError: (controller, request, response) {
                       setState(() {
                         isError = true;
