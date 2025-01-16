@@ -1,13 +1,15 @@
+flutter clean
+flutter pub get
+
 cd ios
 rm -rf Pods Podfile.lock
+rm -rf ~/Library/Caches/CocoaPods/
+rm -rf ~/Library/Developer/Xcode/DerivedData/
 pod cache clean --all
 pod install
 cd ..
 
-adb shell pm clear com.team.visioneer.prayu
 cd android
 ./gradlew clean
 cd ..
 
-flutter clean
-flutter pub get
