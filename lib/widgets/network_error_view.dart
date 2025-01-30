@@ -47,7 +47,7 @@ class NetworkErrorView extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 10),
               ),
               child: const Text(
-                "새로고침",
+                "다시시도",
                 style: TextStyle(color: Colors.white),
               ),
             ),
