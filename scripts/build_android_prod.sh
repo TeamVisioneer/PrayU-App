@@ -1,1 +1,1 @@
-flutter build apk --release --dart-define=ENV=prod
+flutter build appbundle

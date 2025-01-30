@@ -85,6 +85,8 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
         body: Container(
           color: const Color(0xFFF2F3FD),
           child: SafeArea(
+            top: true,
+            bottom: false,
             child: isError
                 ? NetworkErrorView(
                     onRetry: () {
@@ -108,9 +110,17 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                     ),
                     shouldOverrideUrlLoading: _shouldOverrideUrlLoading,
                     onReceivedError: (controller, request, response) {
-                      setState(() {
-                        isError = true;
-                      });
+                      if ([
+                        WebResourceErrorType.CANNOT_CONNECT_TO_HOST,
+                        WebResourceErrorType.TIMEOUT,
+                        WebResourceErrorType.HOST_LOOKUP,
+                        WebResourceErrorType.NOT_CONNECTED_TO_INTERNET,
+                        WebResourceErrorType.FAILED_SSL_HANDSHAKE,
+                      ].contains(response.type)) {
+                        setState(() {
+                          isError = true;
+                        });
+                      }
                     },
                     onWebViewCreated: (controller) async {
                       webViewController = controller;
