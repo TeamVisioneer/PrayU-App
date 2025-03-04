@@ -1,18 +1,18 @@
 name: prayu_app
 description: "A new Flutter project."
 publish_to: "none"
-version: 1.2.1+16
+version: 1.2.2+17
 environment:
-  sdk: ^3.5.4
+  sdk: "3.5.4"
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
-  flutter_inappwebview: ^6.1.5
-  flutter_dotenv: ^5.2.1
-  onesignal_flutter: ^5.2.8
-  flutter_native_splash: ^2.4.3
-  url_launcher: ^6.3.1
+  cupertino_icons: "1.0.8"
+  flutter_inappwebview: "6.1.5"
+  flutter_dotenv: "5.2.1"
+  onesignal_flutter: "5.2.8"
+  flutter_native_splash: "2.4.3"
+  url_launcher: "6.3.1"
 dev_dependencies:
   flutter_test:
     sdk: flutter
