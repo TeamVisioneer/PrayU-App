@@ -49,6 +49,13 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    // iOS 상태바가 표시되도록 설정
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
     OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID'] ?? '');
     OneSignal.Notifications.requestPermission(true);
     OneSignal.Notifications.clearAll();
@@ -82,11 +89,11 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: Container(
           color: const Color(0xFFF2F3FD),
           child: SafeArea(
-            top: true,
-            bottom: false,
+            maintainBottomViewPadding: true,
             child: isError
                 ? NetworkErrorView(
                     onRetry: () {

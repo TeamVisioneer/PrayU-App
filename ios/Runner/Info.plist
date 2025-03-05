@@ -62,5 +62,12 @@
 			<string>kakaolink</string>
 			<string>kakaoplus</string>
 		</array>
+		<key>CFBundleLocalizations</key>
+		<array>
+			<string>ko</string>
+			<string>en</string>
+		</array>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
 	</dict>
 </plist>
