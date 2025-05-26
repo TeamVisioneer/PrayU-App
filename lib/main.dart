@@ -4,6 +4,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'widgets/network_error_view.dart';
 
 void main() async {
@@ -171,6 +172,26 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                             return {
                               'status': 'error',
                               'message': error.toString()
+                            };
+                          }
+                        },
+                      );
+
+                      // Add a new JavaScript handler for app review requests
+                      webViewController?.addJavaScriptHandler(
+                        handlerName: 'requestAppReview',
+                        callback: (args) async {
+                          final InAppReview inAppReview = InAppReview.instance;
+                          if (await inAppReview.isAvailable()) {
+                            inAppReview.requestReview();
+                            return {
+                              'status': 'success',
+                              'message': 'Review requested.'
+                            };
+                          } else {
+                            return {
+                              'status': 'unavailable',
+                              'message': 'In-app review is not available.'
                             };
                           }
                         },
