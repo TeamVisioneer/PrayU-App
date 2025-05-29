@@ -27,12 +27,24 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.team.visioneer.prayu"
         minSdk = 21
         targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Read Facebook App ID from key.properties
+        def facebookAppId = keystoreProperties['facebookAppId']
+
+        // Make them available as build config fields (optional, but can be useful)
+        buildConfigField "String", "FACEBOOK_APP_ID", "\"${facebookAppId}\""
+        // Make them available as resources for AndroidManifest.xml and strings.xml
+        resValue "string", "FACEBOOK_APP_ID_PLACEHOLDER", "\"${facebookAppId}\""
     }
 
     signingConfigs {

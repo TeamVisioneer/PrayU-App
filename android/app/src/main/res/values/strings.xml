@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="facebook_app_id" translatable="false">@string/FACEBOOK_APP_ID_PLACEHOLDER</string>
+</resources> 

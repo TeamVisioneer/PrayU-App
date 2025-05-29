@@ -5,7 +5,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:appinio_social_share/appinio_social_share.dart';
 import 'widgets/network_error_view.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 void main() async {
   await dotenv.load();
@@ -41,6 +44,7 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
   final String platform = Platform.isIOS ? "prayu-ios" : "prayu-android";
   final MethodChannel channel =
       const MethodChannel("com.team.visioneer.prayu/intent");
+  final AppinioSocialShare _socialShare = AppinioSocialShare();
 
   String baseUrl = dotenv.env['BASE_URL'] ?? 'https://www.prayu.site';
   bool isError = false;
@@ -158,6 +162,7 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                         useShouldOverrideUrlLoading: true,
                         supportMultipleWindows: true,
                       ));
+
                       webViewController?.addJavaScriptHandler(
                         handlerName: 'onLogin',
                         callback: (args) async {
@@ -193,6 +198,77 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                               'status': 'unavailable',
                               'message': 'In-app review is not available.'
                             };
+                          }
+                        },
+                      );
+
+                      // Add a new JavaScript handler for haptic feedback
+                      webViewController?.addJavaScriptHandler(
+                        handlerName: 'triggerHapticFeedback',
+                        callback: (args) async {
+                          if (args[0] == 'lightImpact') {
+                            HapticFeedback.lightImpact();
+                          } else if (args[0] == 'mediumImpact') {
+                            HapticFeedback.mediumImpact();
+                          } else if (args[0] == 'heavyImpact') {
+                            HapticFeedback.heavyImpact();
+                          } else if (args[0] == 'selectionClick') {
+                            HapticFeedback.selectionClick();
+                          } else if (args[0] == 'vibrate') {
+                            HapticFeedback.vibrate();
+                          }
+                          return {
+                            'status': 'success',
+                            'message': 'Haptic feedback triggered.'
+                          };
+                        },
+                      );
+
+                      webViewController?.addJavaScriptHandler(
+                        handlerName: 'shareInstagramStory',
+                        callback: (args) async {
+                          String photoUrl = args[0];
+
+                          String? facebookAppId = dotenv.env['FACEBOOK_APP_ID'];
+
+                          if (facebookAppId == null) {
+                            return {
+                              'status': 'error',
+                              'message': 'FACEBOOK_APP_ID not configured'
+                            };
+                          }
+
+                          try {
+                            final response =
+                                await http.get(Uri.parse(photoUrl));
+                            final cacheDirectory =
+                                await getTemporaryDirectory();
+                            final fileName = photoUrl.split('/').last;
+                            final file =
+                                File('${cacheDirectory.path}/$fileName');
+                            await file.writeAsBytes(response.bodyBytes);
+
+                            if (Platform.isIOS) {
+                              await _socialShare.iOS.shareToInstagramStory(
+                                  facebookAppId,
+                                  stickerImage: file.path,
+                                  backgroundTopColor: '#ffffff',
+                                  backgroundBottomColor: '#70AAFF',
+                                  attributionURL: 'https://www.prayu.site');
+                            } else if (Platform.isAndroid) {
+                              await _socialShare.android.shareToInstagramStory(
+                                  facebookAppId,
+                                  stickerImage: file.path,
+                                  backgroundTopColor: '#ffffff',
+                                  backgroundBottomColor: '#70AAFF',
+                                  attributionURL: 'https://www.prayu.site');
+                            }
+                            return {
+                              'status': 'success',
+                              'message': 'Instagram story sharing initiated.',
+                            };
+                          } catch (e) {
+                            return {'status': 'error', 'message': e.toString()};
                           }
                         },
                       );
