@@ -84,6 +84,8 @@
 		</array>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>$(PRODUCT_NAME) needs permission to access photos and videos on your device to share them.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>앱에서 이미지를 앨범에 저장하기 위해 사진 라이브러리 접근이 필요합니다.</string>
 		<key>FacebookAppID</key>
 		<string>$(FACEBOOK_APP_ID)</string>
 		<key>FacebookDisplayName</key>

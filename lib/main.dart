@@ -9,6 +9,9 @@ import 'package:appinio_social_share/appinio_social_share.dart';
 import 'widgets/network_error_view.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'services/image_download_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:gal/gal.dart';
 
 void main() async {
   await dotenv.load();
@@ -269,6 +272,122 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                             };
                           } catch (e) {
                             return {'status': 'error', 'message': e.toString()};
+                          }
+                        },
+                      );
+
+                      // Add JavaScript handler for image download (handles both single and multiple)
+                      webViewController?.addJavaScriptHandler(
+                        handlerName: 'downloadImages',
+                        callback: (args) async {
+                          debugPrint('=== downloadImages 호출 시작 ===');
+                          debugPrint('전달받은 args: $args');
+
+                          if (args.isEmpty) {
+                            debugPrint('에러: args가 비어있음');
+                            return {
+                              'status': 'error',
+                              'message': 'Image URL(s) required'
+                            };
+                          }
+
+                          // 단일 URL 문자열 또는 URL 배열 모두 처리
+                          List<String> imageUrls;
+                          try {
+                            if (args[0] is String) {
+                              // 단일 이미지 URL
+                              imageUrls = [args[0] as String];
+                              debugPrint('단일 이미지 URL 감지: ${imageUrls[0]}');
+                            } else if (args[0] is List) {
+                              // 다중 이미지 URL
+                              imageUrls = (args[0] as List)
+                                  .map((url) => url.toString())
+                                  .toList();
+                              debugPrint('다중 이미지 URL 감지: ${imageUrls.length}개');
+                              for (int i = 0; i < imageUrls.length; i++) {
+                                debugPrint('  [$i]: ${imageUrls[i]}');
+                              }
+                            } else {
+                              debugPrint(
+                                  '에러: 잘못된 URL 형식 - ${args[0].runtimeType}');
+                              return {
+                                'status': 'error',
+                                'message':
+                                    'First argument must be a string URL or array of URLs'
+                              };
+                            }
+                          } catch (e) {
+                            debugPrint('에러: URL 파싱 실패 - $e');
+                            return {
+                              'status': 'error',
+                              'message': 'Invalid image URL(s) format'
+                            };
+                          }
+
+                          if (imageUrls.isEmpty) {
+                            debugPrint('에러: 파싱된 URL이 비어있음');
+                            return {
+                              'status': 'error',
+                              'message': 'No image URLs provided'
+                            };
+                          }
+
+                          // 권한 확인 및 요청 - gal 패키지가 자동으로 처리
+                          debugPrint('=== 이미지 다운로드 시작 ===');
+                          debugPrint('gal 패키지를 사용하여 자동 권한 처리 진행');
+
+                          // 선택적 매개변수 처리 (단일 이미지의 경우 기본값 1)
+                          int maxConcurrent = imageUrls.length == 1 ? 1 : 3;
+                          if (args.length > 1 && args[1] is int) {
+                            maxConcurrent = args[1] as int;
+                            // 안전한 범위로 제한
+                            maxConcurrent = maxConcurrent.clamp(1, 10);
+                          }
+                          debugPrint('동시 다운로드 설정: $maxConcurrent개');
+
+                          debugPrint('=== 이미지 다운로드 시작 ===');
+                          try {
+                            final result = await ImageDownloadService
+                                .downloadMultipleImagesToGallery(
+                              imageUrls,
+                              maxConcurrent: maxConcurrent,
+                            );
+
+                            debugPrint('이미지 다운로드 완료 결과: $result');
+                            debugPrint('=== downloadImages 완료 ===');
+                            return result;
+                          } catch (e) {
+                            debugPrint('이미지 다운로드 중 예외 발생: $e');
+                            final errorResult = {
+                              'status': 'error',
+                              'message': 'Error: ${e.toString()}',
+                              'total': imageUrls.length,
+                              'success': 0,
+                              'failed': imageUrls.length,
+                            };
+                            debugPrint('다운로드 에러 결과 반환: $errorResult');
+                            return errorResult;
+                          }
+                        },
+                      );
+
+                      // Add JavaScript handler for opening app settings
+                      webViewController?.addJavaScriptHandler(
+                        handlerName: 'openAppSettings',
+                        callback: (args) async {
+                          try {
+                            final bool opened = await openAppSettings();
+                            return {
+                              'status': opened ? 'success' : 'error',
+                              'message': opened
+                                  ? '설정 페이지를 열었습니다.'
+                                  : '설정 페이지를 열 수 없습니다.'
+                            };
+                          } catch (e) {
+                            return {
+                              'status': 'error',
+                              'message': 'Error: ${e.toString()}'
+                            };
                           }
                         },
                       );
