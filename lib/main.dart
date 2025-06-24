@@ -11,7 +11,8 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'services/image_download_service.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:gal/gal.dart';
+import 'package:app_links/app_links.dart';
+import 'dart:async';
 
 void main() async {
   await dotenv.load();
@@ -52,6 +53,8 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
   String baseUrl = dotenv.env['BASE_URL'] ?? 'https://www.prayu.site';
   bool isError = false;
   String? _pendingNotificationUrl;
+  StreamSubscription<Uri>? _linkSubscription;
+  late AppLinks _appLinks;
 
   // New async method for OneSignal initialization and permission request
   Future<void> _initializeAndRequestOneSignal() async {
@@ -64,6 +67,55 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
     OneSignal.Notifications.clearAll();
     OneSignal.Notifications.addClickListener(_handlePushNotificationClicked);
     OneSignal.LiveActivities.setupDefault();
+  }
+
+  // Initialize deep link handling
+  Future<void> _initializeDeepLinkHandling() async {
+    try {
+      _appLinks = AppLinks();
+
+      // Handle initial deep link when app is opened from cold start
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        _handleDeepLink(initialUri);
+      }
+
+      // Listen for deep links when app is already running
+      _linkSubscription = _appLinks.uriLinkStream.listen(
+        (Uri uri) {
+          _handleDeepLink(uri);
+        },
+        onError: (err) {
+          debugPrint('Deep link error: $err');
+        },
+      );
+    } catch (e) {
+      debugPrint('Failed to initialize deep link handling: $e');
+    }
+  }
+
+  // Handle deep link URL
+  void _handleDeepLink(Uri uri) {
+    debugPrint('Deep link received: $uri');
+
+    try {
+      if (uri.scheme == 'prayu') {
+        debugPrint('uri.path: ${uri.path}');
+        String webUrl = '$baseUrl${uri.path}';
+
+        // Add query parameters if any
+        if (uri.query.isNotEmpty) {
+          webUrl += '?${uri.query}';
+        }
+
+        debugPrint('Converting deep link to web URL: $webUrl');
+
+        // Use existing navigation method from OneSignal push notifications
+        _performWebViewNavigation(webUrl);
+      }
+    } catch (e) {
+      debugPrint('Error parsing deep link: $e');
+    }
   }
 
   @override
@@ -80,11 +132,15 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
 
     // Call the new async method
     _initializeAndRequestOneSignal();
+
+    // Initialize deep link handling
+    _initializeDeepLinkHandling();
   }
 
   @override
   void dispose() {
     OneSignal.Notifications.removeClickListener(_handlePushNotificationClicked);
+    _linkSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

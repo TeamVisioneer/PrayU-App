@@ -81,6 +81,14 @@
 					<string>fb$(FACEBOOK_APP_ID)</string>
 				</array>
 			</dict>
+			<dict>
+				<key>CFBundleURLName</key>
+				<string>com.team.visioneer.prayu.deeplink</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>prayu</string>
+				</array>
+			</dict>
 		</array>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>$(PRODUCT_NAME) needs permission to access photos and videos on your device to share them.</string>
