@@ -78,6 +78,8 @@ PODS:
     - OneSignalXCFramework/OneSignalOSCore
     - OneSignalXCFramework/OneSignalOutcomes
   - OrderedSet (6.0.3)
+  - package_info_plus (0.4.5):
+    - Flutter
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -96,6 +98,7 @@ DEPENDENCIES:
   - in_app_review (from `.symlinks/plugins/in_app_review/ios`)
   - onesignal_flutter (from `.symlinks/plugins/onesignal_flutter/ios`)
   - OneSignalXCFramework (< 6.0, >= 5.0.0)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
@@ -126,6 +129,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/in_app_review/ios"
   onesignal_flutter:
     :path: ".symlinks/plugins/onesignal_flutter/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   permission_handler_apple:
@@ -148,6 +153,7 @@ SPEC CHECKSUMS:
   onesignal_flutter: 9d61b584081ed9188546e3cba3342858d5d81fec
   OneSignalXCFramework: 4215fb8deb8a669504d39c02dffaf2ec8ebe10ae
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
+  package_info_plus: c0502532a26c7662a62a356cebe2692ec5fe4ec4
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
   url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
