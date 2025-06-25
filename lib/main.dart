@@ -4,7 +4,11 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:in_app_review/in_app_review.dart';
+import 'package:appinio_social_share/appinio_social_share.dart';
 import 'widgets/network_error_view.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 void main() async {
   await dotenv.load();
@@ -40,9 +44,24 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
   final String platform = Platform.isIOS ? "prayu-ios" : "prayu-android";
   final MethodChannel channel =
       const MethodChannel("com.team.visioneer.prayu/intent");
+  final AppinioSocialShare _socialShare = AppinioSocialShare();
 
   String baseUrl = dotenv.env['BASE_URL'] ?? 'https://www.prayu.site';
   bool isError = false;
+  String? _pendingNotificationUrl;
+
+  // New async method for OneSignal initialization and permission request
+  Future<void> _initializeAndRequestOneSignal() async {
+    OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID'] ?? '');
+
+    final status = await OneSignal.Notifications.permissionNative();
+    if (status == OSNotificationPermission.notDetermined) {
+      await OneSignal.Notifications.requestPermission(true);
+    }
+    OneSignal.Notifications.clearAll();
+    OneSignal.Notifications.addClickListener(_handlePushNotificationClicked);
+    OneSignal.LiveActivities.setupDefault();
+  }
 
   @override
   void initState() {
@@ -56,16 +75,13 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
       statusBarIconBrightness: Brightness.dark,
     ));
 
-    OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID'] ?? '');
-    OneSignal.Notifications.requestPermission(true);
-    OneSignal.Notifications.clearAll();
-    OneSignal.Notifications.addClickListener(handlePushNotification);
-    OneSignal.LiveActivities.setupDefault();
+    // Call the new async method
+    _initializeAndRequestOneSignal();
   }
 
   @override
   void dispose() {
-    OneSignal.Notifications.removeClickListener(handlePushNotification);
+    OneSignal.Notifications.removeClickListener(_handlePushNotificationClicked);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -93,7 +109,8 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
         body: Container(
           color: const Color(0xFFF2F3FD),
           child: SafeArea(
-            maintainBottomViewPadding: true,
+            top: true,
+            bottom: false,
             child: isError
                 ? NetworkErrorView(
                     onRetry: () {
@@ -145,6 +162,7 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                         useShouldOverrideUrlLoading: true,
                         supportMultipleWindows: true,
                       ));
+
                       webViewController?.addJavaScriptHandler(
                         handlerName: 'onLogin',
                         callback: (args) async {
@@ -163,6 +181,102 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                           }
                         },
                       );
+
+                      // Add a new JavaScript handler for app review requests
+                      webViewController?.addJavaScriptHandler(
+                        handlerName: 'requestAppReview',
+                        callback: (args) async {
+                          final InAppReview inAppReview = InAppReview.instance;
+                          if (await inAppReview.isAvailable()) {
+                            inAppReview.requestReview();
+                            return {
+                              'status': 'success',
+                              'message': 'Review requested.'
+                            };
+                          } else {
+                            return {
+                              'status': 'unavailable',
+                              'message': 'In-app review is not available.'
+                            };
+                          }
+                        },
+                      );
+
+                      // Add a new JavaScript handler for haptic feedback
+                      webViewController?.addJavaScriptHandler(
+                        handlerName: 'triggerHapticFeedback',
+                        callback: (args) async {
+                          if (args[0] == 'lightImpact') {
+                            HapticFeedback.lightImpact();
+                          } else if (args[0] == 'mediumImpact') {
+                            HapticFeedback.mediumImpact();
+                          } else if (args[0] == 'heavyImpact') {
+                            HapticFeedback.heavyImpact();
+                          } else if (args[0] == 'selectionClick') {
+                            HapticFeedback.selectionClick();
+                          } else if (args[0] == 'vibrate') {
+                            HapticFeedback.vibrate();
+                          }
+                          return {
+                            'status': 'success',
+                            'message': 'Haptic feedback triggered.'
+                          };
+                        },
+                      );
+
+                      webViewController?.addJavaScriptHandler(
+                        handlerName: 'shareInstagramStory',
+                        callback: (args) async {
+                          String photoUrl = args[0];
+
+                          String? facebookAppId = dotenv.env['FACEBOOK_APP_ID'];
+
+                          if (facebookAppId == null) {
+                            return {
+                              'status': 'error',
+                              'message': 'FACEBOOK_APP_ID not configured'
+                            };
+                          }
+
+                          try {
+                            final response =
+                                await http.get(Uri.parse(photoUrl));
+                            final cacheDirectory =
+                                await getTemporaryDirectory();
+                            final fileName = photoUrl.split('/').last;
+                            final file =
+                                File('${cacheDirectory.path}/$fileName');
+                            await file.writeAsBytes(response.bodyBytes);
+
+                            if (Platform.isIOS) {
+                              await _socialShare.iOS.shareToInstagramStory(
+                                  facebookAppId,
+                                  stickerImage: file.path,
+                                  backgroundTopColor: '#ffffff',
+                                  backgroundBottomColor: '#70AAFF',
+                                  attributionURL: 'https://www.prayu.site');
+                            } else if (Platform.isAndroid) {
+                              await _socialShare.android.shareToInstagramStory(
+                                  facebookAppId,
+                                  stickerImage: file.path,
+                                  backgroundTopColor: '#ffffff',
+                                  backgroundBottomColor: '#70AAFF',
+                                  attributionURL: 'https://www.prayu.site');
+                            }
+                            return {
+                              'status': 'success',
+                              'message': 'Instagram story sharing initiated.',
+                            };
+                          } catch (e) {
+                            return {'status': 'error', 'message': e.toString()};
+                          }
+                        },
+                      );
+
+                      // Process pending notification URL if any
+                      if (_pendingNotificationUrl != null && mounted) {
+                        _performWebViewNavigation(_pendingNotificationUrl!);
+                      }
                     },
                   ),
           ),
@@ -209,16 +323,41 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
     return NavigationActionPolicy.ALLOW;
   }
 
-  Future<void> handlePushNotification(OSNotificationClickEvent event) async {
-    final url = event.notification.additionalData?['url'] as String?;
-    if (url == null) return;
-    if (webViewController != null) {
+  Future<void> _performWebViewNavigation(String url) async {
+    if (webViewController != null && mounted) {
       await webViewController!.evaluateJavascript(source: '''
           window.postMessage({
             type: 'PUSH_NOTIFICATION_NAVIGATION',
             url: '$url'
           }, '*');
         ''');
+      // Clear pending URL if this navigation was for it
+      if (_pendingNotificationUrl == url) {
+        setState(() {
+          _pendingNotificationUrl = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _handlePushNotificationClicked(
+      OSNotificationClickEvent event) async {
+    final url = event.notification.additionalData?['url'] as String?;
+    if (url == null) return;
+
+    if (webViewController != null && mounted) {
+      // WebView is ready, navigate directly
+      _performWebViewNavigation(url);
+    } else {
+      // WebView is not ready (app likely launching), store the URL
+      if (mounted) {
+        setState(() {
+          _pendingNotificationUrl = url;
+        });
+      } else {
+        // If not mounted, store directly. This case should be rare if listener is setup in initState.
+        _pendingNotificationUrl = url;
+      }
     }
   }
 }

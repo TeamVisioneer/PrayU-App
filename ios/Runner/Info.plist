@@ -61,7 +61,33 @@
 			<string>kakaokompassauth</string>
 			<string>kakaolink</string>
 			<string>kakaoplus</string>
+			<string>instagram</string>
+			<string>instagram-stories</string>
+			<string>fb</string>
+			<string>fbapi</string>
+			<string>fbauth2</string>
+			<string>fbshareextension</string>
+			<string>facebook-stories</string>
+			<string>fb-messenger-share-api</string>
+			<string>tg</string>
+			<string>whatsapp</string>
+			<string>twitter</string>
 		</array>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>fb$(FACEBOOK_APP_ID)</string>
+				</array>
+			</dict>
+		</array>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>$(PRODUCT_NAME) needs permission to access photos and videos on your device to share them.</string>
+		<key>FacebookAppID</key>
+		<string>$(FACEBOOK_APP_ID)</string>
+		<key>FacebookDisplayName</key>
+		<string>PrayU</string>
 		<key>CFBundleLocalizations</key>
 		<array>
 			<string>ko</string>
