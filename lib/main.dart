@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'services/image_download_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:app_links/app_links.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:async';
 
 void main() async {
@@ -443,6 +444,31 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                             return {
                               'status': 'error',
                               'message': 'Error: ${e.toString()}'
+                            };
+                          }
+                        },
+                      );
+
+                      // Add JavaScript handler for getting app version
+                      webViewController?.addJavaScriptHandler(
+                        handlerName: 'getAppVersion',
+                        callback: (args) async {
+                          try {
+                            PackageInfo packageInfo =
+                                await PackageInfo.fromPlatform();
+                            return {
+                              'status': 'success',
+                              'version': packageInfo.version,
+                              'buildNumber': packageInfo.buildNumber,
+                              'appName': packageInfo.appName,
+                              'packageName': packageInfo.packageName,
+                              'platform': Platform.isIOS ? 'ios' : 'android',
+                            };
+                          } catch (e) {
+                            return {
+                              'status': 'error',
+                              'message':
+                                  'Error getting app version: ${e.toString()}'
                             };
                           }
                         },

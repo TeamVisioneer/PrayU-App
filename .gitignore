@@ -79,6 +79,11 @@ lib/generated_plugin_registrant.dart
 **/ios/Flutter/Flutter.framework
 **/ios/Flutter/Flutter.podspec
 **/ios/Flutter/Generated.xcconfig
+
+# env
+**/ios/Flutter/Release.xcconfig
+**/ios/Flutter/Debug.xcconfig
+
 **/ios/Flutter/app.flx
 **/ios/Flutter/app.zip
 **/ios/Flutter/flutter_assets/
