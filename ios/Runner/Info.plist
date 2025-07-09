@@ -103,7 +103,16 @@
 			<string>ko</string>
 			<string>en</string>
 		</array>
-		<key>ITSAppUsesNonExemptEncryption</key>
-		<false/>
-	</dict>
+			<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>FlutterDeepLinkingEnabled</key>
+	<true/>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:www.prayu.site</string>
+		<string>applinks:staging.prayu.site</string>
+		<string>applinks:app.prayu.site</string>
+		<string>applinks:*.prayu.site</string>
+	</array>
+</dict>
 </plist>

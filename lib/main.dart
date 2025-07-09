@@ -101,6 +101,7 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
 
     try {
       if (uri.scheme == 'prayu') {
+        // Handle custom scheme: prayu://path -> https://www.prayu.site/path
         debugPrint('uri.path: ${uri.path}');
         String webUrl = '$baseUrl${uri.path}';
 
@@ -110,9 +111,11 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
         }
 
         debugPrint('Converting deep link to web URL: $webUrl');
-
-        // Use existing navigation method from OneSignal push notifications
         _performWebViewNavigation(webUrl);
+      } else if (uri.scheme == 'https' && uri.host.endsWith('.prayu.site')) {
+        // Handle Universal Links/App Links: https://*.prayu.site/path -> navigate directly
+        debugPrint('Universal Link received: $uri');
+        _performWebViewNavigation(uri.toString());
       }
     } catch (e) {
       debugPrint('Error parsing deep link: $e');
@@ -170,7 +173,7 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
           color: const Color(0xFFF2F3FD),
           child: SafeArea(
             top: true,
-            bottom: false,
+            bottom: Platform.isIOS ? false : true,
             child: isError
                 ? NetworkErrorView(
                     onRetry: () {

@@ -15,16 +15,16 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.team.visioneer.prayu"
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = JavaVersion.VERSION_11
     }
 
     buildFeatures {
@@ -34,17 +34,19 @@ android {
     defaultConfig {
         applicationId = "com.team.visioneer.prayu"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
         // Read Facebook App ID from key.properties
-        def facebookAppId = keystoreProperties['facebookAppId']
+        def facebookAppId = keystoreProperties['facebookAppId'] ?: "YOUR_FACEBOOK_APP_ID"
 
         // Make them available as build config fields (optional, but can be useful)
         buildConfigField "String", "FACEBOOK_APP_ID", "\"${facebookAppId}\""
         // Make them available as resources for AndroidManifest.xml and strings.xml
-        resValue "string", "FACEBOOK_APP_ID_PLACEHOLDER", "\"${facebookAppId}\""
+        resValue "string", "facebook_app_id", "${facebookAppId}"
+        // Create unique authority to avoid conflicts
+        resValue "string", "facebook_content_provider_authority", "com.facebook.app.FacebookContentProvider${facebookAppId}"
     }
 
     signingConfigs {
