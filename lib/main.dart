@@ -60,6 +60,7 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
   // New async method for OneSignal initialization and permission request
   Future<void> _initializeAndRequestOneSignal() async {
     OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID'] ?? '');
+    OneSignal.User.setLanguage('ko');
 
     final status = await OneSignal.Notifications.permissionNative();
     if (status == OSNotificationPermission.notDetermined) {
