@@ -1,0 +1,155 @@
+# PrayU-App - Flutter Mobile Rules
+
+## Project Overview
+PrayU-App은 기도 중심의 종교 서비스 모바일 애플리케이션으로, Flutter 기반의 하이브리드 앱입니다.
+flutter_inappwebview를 통해 React 웹 애플리케이션을 서빙하며, 네이티브 기능을 제공합니다.
+
+## Technology Stack
+- **Framework**: Flutter 3.5.4
+- **WebView**: flutter_inappwebview
+- **Push Notifications**: OneSignal
+- **Environment Management**: flutter_dotenv
+- **Deep Linking**: app_links
+- **Social Sharing**: appinio_social_share
+- **Image Handling**: gal, path_provider
+- **Permissions**: permission_handler
+- **HTTP Client**: http, dio
+
+## Development Guidelines
+
+### General Rules
+1. **Language**: 모든 UI 텍스트와 주석은 한국어를 우선 사용
+2. **Platform Support**: iOS/Android 플랫폼별 차이점 고려
+3. **Code Quality**: flutter_lints 규칙 준수
+4. **Performance**: 네이티브 성능 최적화
+
+### Project Structure
+```
+lib/
+├── main.dart              # 앱 엔트리 포인트
+├── services/             # 비즈니스 로직 서비스
+├── widgets/              # 재사용 가능한 위젯
+├── models/               # 데이터 모델
+├── utils/                # 유틸리티 함수
+└── config/               # 설정 파일
+```
+
+### WebView Configuration
+- **InAppWebView Settings**: JavaScript, 다중 창, 다운로드 지원
+- **URL Loading**: 외부 링크 처리 및 내부 네비게이션 구분
+- **Error Handling**: 네트워크 오류 시 커스텀 에러 페이지
+- **Bridge Communication**: JavaScript와 Dart 간 통신 구현
+
+### Platform Specific Considerations
+
+#### iOS Specific
+- **SafeArea**: 노치 및 홈 인디케이터 처리
+- **Status Bar**: 상태바 스타일 및 색상 설정
+- **App Store Guidelines**: 앱스토어 정책 준수
+- **Background Modes**: 백그라운드 실행 권한
+
+#### Android Specific
+- **Permissions**: 런타임 권한 요청 처리
+- **Back Button**: 웹뷰 히스토리 및 앱 종료 처리
+- **Intent Handling**: 외부 앱과의 연동
+- **Notification Channels**: 알림 채널 설정
+
+### Deep Link Handling
+- **Scheme**: `prayu://` 커스텀 스킴 처리
+- **Universal Links**: iOS Universal Links 지원
+- **App Links**: Android App Links 지원
+- **URL Parsing**: 딥링크 URL 파싱 및 웹뷰 네비게이션
+
+### Push Notifications (OneSignal)
+- **Initialization**: OneSignal SDK 초기화
+- **Permission Handling**: 알림 권한 요청 및 관리
+- **Notification Click**: 알림 클릭 시 딥링크 처리
+- **Badge Management**: 앱 아이콘 배지 관리
+
+### Environment Management
+```
+.env                 # 기본 환경 설정
+.env.staging        # 스테이징 환경
+.env.prod          # 프로덕션 환경
+```
+
+### Required Environment Variables
+```
+BASE_URL=
+ONESIGNAL_APP_ID=
+ENVIRONMENT=
+```
+
+### Social Sharing
+- **Platform Integration**: iOS/Android 네이티브 공유 기능
+- **Content Types**: 텍스트, 이미지, URL 공유
+- **Social Platforms**: 카카오톡, 인스타그램 등 지원
+
+### Image Handling
+- **Download**: 웹에서 이미지 다운로드
+- **Gallery Save**: 디바이스 갤러리에 저장
+- **Permission**: 갤러리 접근 권한 관리
+- **Format Support**: JPEG, PNG, WebP 지원
+
+### File Naming Conventions
+- **Dart Files**: snake_case (e.g., `main.dart`, `web_view_screen.dart`)
+- **Classes**: PascalCase (e.g., `WebViewScreen`, `NotificationService`)
+- **Variables**: camelCase (e.g., `webViewController`, `baseUrl`)
+- **Constants**: SCREAMING_SNAKE_CASE (e.g., `BASE_URL`, `APP_NAME`)
+
+## Performance Optimization
+- **WebView Memory**: 웹뷰 메모리 관리 및 재사용
+- **Image Caching**: 이미지 캐싱 전략
+- **Background Processing**: 백그라운드 작업 최적화
+- **Battery Usage**: 배터리 효율성 고려
+
+## Security Considerations
+- **Certificate Pinning**: SSL 인증서 고정
+- **Deep Link Validation**: 딥링크 URL 검증
+- **Sensitive Data**: 민감 정보 보안 저장
+- **WebView Security**: 웹뷰 보안 설정
+
+## Testing Strategy
+- **Widget Tests**: Flutter 위젯 테스트
+- **Integration Tests**: 통합 테스트
+- **Platform Tests**: iOS/Android 플랫폼별 테스트
+- **WebView Tests**: 웹뷰 기능 테스트
+
+## Build and Deployment
+
+### Build Scripts
+```bash
+# Android
+flutter build apk --release --flavor prod
+flutter build appbundle --release --flavor prod
+
+# iOS
+flutter build ios --release --flavor prod
+```
+
+### App Store Deployment
+- **iOS**: App Store Connect 배포
+- **Android**: Google Play Console 배포
+- **Version Management**: 버전 코드 및 이름 관리
+
+## Error Handling
+- **Crash Reporting**: 네이티브 크래시 리포팅
+- **WebView Errors**: 웹뷰 로딩 실패 처리
+- **Network Errors**: 네트워크 연결 오류 처리
+- **Permission Errors**: 권한 거부 시 대응
+
+## Key Features Context
+- **WebView Container**: React 웹앱을 위한 네이티브 컨테이너
+- **Push Notifications**: 기도 알림 및 그룹 활동 알림
+- **Deep Linking**: 기도 카드 및 그룹 공유 링크
+- **Social Sharing**: 기도 내용 소셜 미디어 공유
+- **Offline Support**: 네트워크 오류 시 적절한 처리
+
+## Code Style
+- **Indentation**: 2 spaces
+- **Quotes**: Double quotes for Dart strings
+- **Trailing Commas**: Preferred for better formatting
+- **Line Length**: 80 characters maximum
+- **Import Order**: Dart SDK → Flutter → Third-party → Local
+
+Remember: This is a Korean religious service app serving as a native container for a React web application. Focus on seamless webview integration, native mobile features, and providing the best mobile user experience for prayer and community features. 

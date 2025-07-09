@@ -31,12 +31,48 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Deep Link Intent Filter -->
+            <!-- Deep Link Intent Filter for custom scheme -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="prayu" />
+            </intent-filter>
+            
+            <!-- App Links Intent Filter for HTTPS - Main domain -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" 
+                      android:host="www.prayu.site" />
+            </intent-filter>
+            
+            <!-- App Links Intent Filter for HTTPS - Staging domain -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" 
+                      android:host="staging.prayu.site" />
+            </intent-filter>
+            
+            <!-- App Links Intent Filter for HTTPS - App domain -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" 
+                      android:host="app.prayu.site" />
+            </intent-filter>
+            
+            <!-- App Links Intent Filter for HTTPS - Any subdomain of prayu.site -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" 
+                      android:host="*.prayu.site" />
             </intent-filter>
         </activity>
         
@@ -65,7 +101,7 @@
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
             android:label="${applicationName}" />
         <provider android:name="com.facebook.FacebookContentProvider"
-            android:authorities="com.facebook.app.FacebookContentProvider@string/facebook_app_id"
+            android:authorities="@string/facebook_content_provider_authority"
             android:exported="true" />
 
     </application>
