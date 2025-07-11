@@ -1,7 +1,7 @@
 name: prayu_app
 description: "A new Flutter project."
 publish_to: "none"
-version: 1.3.0+18
+version: 1.3.1+19
 environment:
   sdk: "3.5.4"
 dependencies:
