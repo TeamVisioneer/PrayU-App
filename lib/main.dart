@@ -53,7 +53,6 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
 
   String baseUrl = dotenv.env['BASE_URL'] ?? 'https://www.prayu.site';
   bool isError = false;
-  String? _pendingNotificationUrl;
   StreamSubscription<Uri>? _linkSubscription;
   late AppLinks _appLinks;
 
@@ -195,6 +194,15 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                       useOnDownloadStart: true,
                       useShouldOverrideUrlLoading: true,
                       supportMultipleWindows: true,
+                      // 쿠키 및 세션 보존 설정
+                      thirdPartyCookiesEnabled: true,
+                      cacheEnabled: true,
+                      clearCache: false,
+                      domStorageEnabled: true,
+                      databaseEnabled: true,
+                      // 사용자 데이터 보존
+                      applicationNameForUserAgent: "PrayU App",
+                      sharedCookiesEnabled: true,
                     ),
                     shouldOverrideUrlLoading: _shouldOverrideUrlLoading,
                     onReceivedError: (controller, request, response) {
@@ -225,6 +233,13 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                         useOnDownloadStart: true,
                         useShouldOverrideUrlLoading: true,
                         supportMultipleWindows: true,
+                        // 쿠키 및 세션 보존 설정
+                        thirdPartyCookiesEnabled: true,
+                        cacheEnabled: true,
+                        clearCache: false,
+                        domStorageEnabled: true,
+                        databaseEnabled: true,
+                        sharedCookiesEnabled: true,
                       ));
 
                       webViewController?.addJavaScriptHandler(
@@ -477,11 +492,6 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
                           }
                         },
                       );
-
-                      // Process pending notification URL if any
-                      if (_pendingNotificationUrl != null && mounted) {
-                        _performWebViewNavigation(_pendingNotificationUrl!);
-                      }
                     },
                   ),
           ),
@@ -536,12 +546,6 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
             url: '$url'
           }, '*');
         ''');
-      // Clear pending URL if this navigation was for it
-      if (_pendingNotificationUrl == url) {
-        setState(() {
-          _pendingNotificationUrl = null;
-        });
-      }
     }
   }
 
@@ -553,16 +557,6 @@ class WebViewState extends State<WebView> with WidgetsBindingObserver {
     if (webViewController != null && mounted) {
       // WebView is ready, navigate directly
       _performWebViewNavigation(url);
-    } else {
-      // WebView is not ready (app likely launching), store the URL
-      if (mounted) {
-        setState(() {
-          _pendingNotificationUrl = url;
-        });
-      } else {
-        // If not mounted, store directly. This case should be rare if listener is setup in initState.
-        _pendingNotificationUrl = url;
-      }
     }
   }
 }
