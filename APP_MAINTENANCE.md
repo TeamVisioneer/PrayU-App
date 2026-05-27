@@ -367,7 +367,7 @@ Flutter 앱 버전은 `pubspec.yaml`에서 관리합니다.
 이 문서를 작성한 시점의 버전:
 
 ```yaml
-version: 1.3.2+20
+version: 1.3.2+21
 ```
 
 별도 릴리즈 규칙이 생기기 전까지는 다음 기준을 사용합니다.
@@ -455,3 +455,18 @@ Play Console에서 versionCode 19가 `READ_MEDIA_IMAGES`와 `READ_MEDIA_VIDEO`�
 향후 사용자가 직접 기기 사진/동영상을 선택해 업로드하는 기능이 필요하면 broad
 media read 권한을 다시 추가하기보다 Android system photo picker 기반 접근을
 우선 검토합니다.
+
+### 2026-05-26: Google Play 16KB memory page size 대응
+
+Play Console에서 versionCode 20 업로드 시 16KB memory page size 미지원 오류가
+발생했습니다. 로컬 ELF load alignment는 16KB 이상이었지만, AAB에서 생성되는 APK의
+native library zip alignment를 위해 실제 적용되는 Android Gradle Plugin 버전도
+8.5.1 이상이어야 합니다.
+
+조치:
+
+- `android/settings.gradle`의 `com.android.application` plugin version을 `8.1.0`에서
+  `8.8.0`으로 업데이트.
+- `android/app/build.gradle`의 `ndkVersion`을 `28.0.13004108`로 명시.
+- `pubspec.yaml` build number를 `21`로 올려 Play Console에 새 AAB를 제출할 수 있게
+  함.
