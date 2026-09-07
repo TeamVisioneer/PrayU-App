@@ -25,6 +25,7 @@
 계획: [deeplink-push-review-plan.md](plans/deeplink-push-review-plan.md)
 
 진단된 원인:
+- 🔼 **우선순위 상향 (2026-09-07)**: 카카오 로그인이 iOS·Android 모두 "카카오톡 → 브라우저 완료 카드 → 수동으로 앱 복귀"다. **로그인 후 앱 자동 복귀**는 이 트랙(App Links/Universal Links 검증 + 딥링크 수신 수리)의 결과물이라 수용 기준에 추가: 카카오 로그인 완료 시 앱이 자동으로 열리고 WebView 가 `login-redirect` 를 이어받아 로그인. web 쪽 기록: [PrayU-web backlog](../../PrayU-web/docs/backlog.md) "로그인 후 앱 자동 복귀"
 - **https 딥링크가 앱을 안 엶** — 네이티브 설정은 완비됐으나 웹에 배포된 검증 파일이 빈 상태 (`assetlinks.json`의 지문 배열 `[]`, AASA의 `details: []`)
   · 참고: 이 빈 검증 파일이 카카오 원탭 스파이크(2026-08-22)에서 **유니버설 링크 미발화**의 원인이었을 가능성이 높다
 - **콜드 스타트 URL 유실** — 푸시/딥링크 모두 `webViewController != null`일 때만 이동하고 아니면 조용히 버림
@@ -41,6 +42,8 @@
 ## 완료
 
 ### ~~카카오톡 앱 전환 로그인 복원~~ — 2026-08-23, web 단독(B안)으로 해결. App 작업 불필요
+
+- **2026-09-06 후일담**: B안의 안드로이드 발사가 iOS 스킴 유추(미검증)라 안드로이드 원탭이 2주간 불가 → web v0.16.1 폴백 → **v0.16.2 (B′: 카카오톡 로그인 액티비티 intent + Api resolve)** 로 복원. App 무변경 — 기존 `handleIntent`(`Intent.parseUri`)와 매니페스트 `<queries>` com.kakao.talk 이 그대로 쓰였다. 기록: [PrayU-web archive/kakao-android-onetap.md](../../PrayU-web/docs/archive/kakao-android-onetap.md)
 
 계획: [plans/kakao-app-switch-restore.md](plans/kakao-app-switch-restore.md) (보류 확정 상태로 보존)
 
