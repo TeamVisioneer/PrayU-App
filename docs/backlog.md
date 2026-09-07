@@ -36,6 +36,13 @@
 
 ## 확인 필요
 
+- [x] ~~🔴 **Android 개발자 인증 등록 확인 (Play Console 얼러트, 기한 2026-09-30)**~~ — **2026-09-07 확인 완료**: `com.team.visioneer.prayu` **등록됨**, 키 1개(Play 앱 서명 키 `13:B9:C6:…`) **확인됨**, 최근 업데이트 2026-03-05(자동 등록). 추가 조치 없음. 아래는 경위 기록.
+  Google 의 새 요구사항: 패키지명·서명 키가 개발자 계정에 등록돼야 한다.
+  PrayU 는 **Play 앱 서명(Google 관리 키) 사용 + Play 외부 배포 없음**(2026-09-07 코드 실측: APK 링크 0건)이라 **자동 등록 대상(99%)** 일 가능성이 높다 — 그래도 눈으로 확인한다.
+  사람 작업: Play Console 홈 → "Android 개발자 인증" 페이지 → `com.team.visioneer.prayu` 옆 상태가 **등록됨**인지 확인 → 아니면 그 자리에서 등록.
+  참고: 로컬 `key.jks` 는 **업로드 키**라 Play 배포만 하면 추가 등록 불필요(앱 서명 키는 Google 이 자동 등록). 외부 배포(APK 직접 배포·타 스토어)를 시작할 때만 그 서명 키를 추가 등록.
+  9/30 강제는 브라질·인니·싱가포르·태국 참여 스토어부터, 전 세계는 2027~ — 한국 사용자 즉시 영향은 없으나 Play 삭제 경고 문구가 있으니 기한 전 확인.
+  근거: https://developer.android.com/developer-verification/guides/faq (2026-07-15 갱신)
 - [ ] `viewport-fit=cover` 도입(web #464) 후 **WebView 렌더링 회귀 확인** — 상하단 잘림 없는지, 핵심 플로우(로그인·그룹·기도카드·공유) 정상인지
 - [ ] 현재 작업 브랜치(`codex/support-16kb-page-size`)의 미커밋 `ios/Runner.xcodeproj/project.pbxproj` 변경(팀 ID 전환) 정리
 
